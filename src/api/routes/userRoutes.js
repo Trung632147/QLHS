@@ -2,17 +2,24 @@
 const express = require('express');
 const router = express.Router();
 const userController = require('../controllers/userController');
+const multerService = require('../../service/multerService');
+const { validateRegister, validateRegisterMiddleware } = require('../../service/userValidator');
+const { authenticateToken, authorizeMiddleware } = require('../../middleware/authMiddleware');
 
-// Route để lấy thông tin của tất cả người dùng
+// Lấy thông tin của tất cả người dùng
 router.get('/', userController.getAllUsers);
 
-// Route để tạo mới một người dùng
-router.post('/createuser', userController.createUser);
+// Đăng ký
+router.post('/register', multerService.single('avatar'), validateRegister, validateRegisterMiddleware, userController.register);
 
-// Route để cập nhật một người dùng
-router.put('/updateuser/:id', userController.updateUser);
+// Đăng nhập
+router.post('/login', userController.loginUser);
 
-// Route để xóa một người dùng
-router.delete('/deleteuser/:id', userController.deleteUser);
+// Đăng xuất
+router.post('/logout', userController.logoutUser);
+
+// Xác thực và phân quyền
+router.put('/updateuser/:id', authenticateToken, userController.updateUser);
+router.delete('/deleteuser/:id', authenticateToken, authorizeMiddleware(['admin']), userController.deleteUser);
 
 module.exports = router;
